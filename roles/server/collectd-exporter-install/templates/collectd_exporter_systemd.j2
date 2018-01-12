@@ -1,0 +1,9 @@
+[Unit]
+Description=collectd exporter
+After=network.target
+
+[Service]
+ExecStart={{ collectd_exporter_path }}/collectd_exporter -collectd.listen-address=0.0.0.0:{{ collectd_exporter_port }}
+
+[Install]
+WantedBy=default.target

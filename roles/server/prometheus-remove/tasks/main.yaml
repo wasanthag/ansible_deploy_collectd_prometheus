@@ -1,0 +1,29 @@
+- name: Stop prometheus service
+  service:
+    name: prometheus
+    state: stopped
+- name: Find the name of the prometheus unarchived directory
+  find:
+    path: /opt
+    patterns: '*prometheus*'
+    file_type: directory
+  register: dir_name
+- name: Delete prometheus directory
+  file:
+    path: "{{ dir_name.files[0].path }}"
+    state: absent
+- name: Delete /etc/systemd/system/prometheus.service
+  file:
+    path: /etc/systemd/system/prometheus.service
+    state: absent
+- name: Check if firewalld is installed
+  yum:
+    list: firewalld
+  register: firewalld_op
+- name: Clode tcp port {{ prometheus_web_port}}
+  firewalld:
+    port: "{{ prometheus_web_port }}/tcp"
+    permanent: true
+    state: disabled
+    immediate: true
+  when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0

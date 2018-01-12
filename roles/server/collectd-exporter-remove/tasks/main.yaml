@@ -1,0 +1,32 @@
+- name: Stop collectd exporter service
+  service:
+    name: collectd_exporter
+    state: stopped
+- name: Find the name of the collectd exporter unarchived directory
+  find:
+    path: /opt
+    patterns: '*collectd_exporter*'
+    file_type: directory
+  register: dir_name
+- name: Delete /opt/collectd-exporter directory
+  file:
+    path: "{{ dir_name.files[0].path }}"
+    state: absent
+- name: Delete /etc/systemd/system/collectd_exporter.service
+  file:
+    path: /etc/systemd/system/collectd_exporter.service
+    state: absent
+- name: Check if firewalld is installed
+  yum:
+    list: firewalld
+  register: firewalld_op
+- name: Clode tcp port {{ collectd_exporter_port}} , {{ collectd_exporter_http_port }}
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    state: disabled
+    immediate: true
+  with_items:
+    - "{{ collectd_exporter_port }}"
+    - "{{ collectd_exporter_http_port }}"
+  when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0

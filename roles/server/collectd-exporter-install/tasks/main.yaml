@@ -1,0 +1,43 @@
+- name: Update yum
+  yum:
+    name: '*'
+    state: latest
+    update_cache: true
+- name: Download collectd exporter tarball
+  unarchive:
+    src: "{{ collectd_exporter_download_url }}"
+    dest: /opt/
+    remote_src: yes
+- name: Find the name of the collectd exporter unarchived directory
+  find:
+    path: /opt
+    patterns: '*collectd_exporter*'
+    file_type: directory
+  register: dir_name
+- debug: var=dir_name.files[0].path 
+- set_fact: 
+    collectd_exporter_path: "{{ dir_name.files[0].path }}"
+- name: Create systemd service for collectd exporter
+  template:
+    src: collectd_exporter_systemd.j2
+    dest: /etc/systemd/system/collectd_exporter.service
+- name: just force systemd to reread configs (2.4 and above)
+  systemd: daemon_reload=yes
+- name: Start collectd exporter service
+  service:
+    name: collectd_exporter
+    state: started
+- name: Check if firewalld is installed
+  yum:
+    list: firewalld
+  register: firewalld_op
+- name: Open tcp port {{ collectd_exporter_port}} , {{ collectd_exporter_http_port }}
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  with_items:
+    - "{{ collectd_exporter_port }}"
+    - "{{ collectd_exporter_http_port }}"
+  when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0

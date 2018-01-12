@@ -1,0 +1,52 @@
+- name: Update yum
+  yum:
+    name: '*'
+    state: latest
+    update_cache: true
+- name: Download prometheus tarball
+  unarchive:
+    src: "{{ prometheus_download_url }}"
+    dest: /opt/
+    remote_src: yes
+- name: Find the name of the prometheus unarchived directory
+  find:
+    path: /opt
+    patterns: '*prometheus*'
+    file_type: directory
+  register: dir_name
+- debug: var=dir_name.files[0].path 
+- set_fact: 
+    prometheus_path: "{{ dir_name.files[0].path }}"
+- name: Create systemd service for prometheus
+  template:
+    src: prometheus_systemd.j2
+    dest: /etc/systemd/system/prometheus.service
+- name: Create prometheus.yml
+  template:
+    src: prometheus_yml.j2
+    dest: "{{ prometheus_path }}/prometheus.yml"
+- name: just force systemd to reread configs (2.4 and above)
+  systemd: daemon_reload=yes
+- name: Start prometheus service
+  service:
+    name: prometheus
+    state: started
+- name: Check if firewalld is installed
+  yum:
+    list: firewalld
+  register: firewalld_op
+- name: Open tcp port {{ prometheus_web_port }}
+  firewalld:
+    port: "{{ prometheus_web_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0
+- name: Verify if Prometheus is listening on TCP port {{ prometheus_port }}
+  get_url:
+    url: "http://{{ ansible_default_ipv4.address }}:{{ prometheus_web_port }}/graph"
+    dest: /tmp
+  register: dashboard_access
+- fail:
+    msg: "Prometheus expression browser is not listening on port {{ prometheus_web_port }} on server {{ ansible_default_ipv4.address }}"
+  when: dashboard_access.status_code != 200

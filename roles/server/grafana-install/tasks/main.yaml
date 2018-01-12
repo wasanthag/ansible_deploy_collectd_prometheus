@@ -1,0 +1,29 @@
+- name: Update yum and install grafana
+  yum:
+    name: "{{ grafana_download_url }}"
+    state: present
+    update_cache: true
+- name: Start grafana service
+  service:
+    name: grafana-server
+    state: started
+- name: Check if firewalld is installed
+  yum:
+    list: firewalld
+  register: firewalld_op
+- name: Open tcp port {{ grafana_port }}
+  firewalld:
+    port: "{{ grafana_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: true
+  when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0
+- name: Verify if grafana is is listening on TCP port {{ grafana_port }}
+  get_url:
+    url: "http://{{ ansible_default_ipv4.address }}:{{ grafana_port }}/login"
+    dest: /tmp
+  register: dashboard_access
+- fail:
+    msg: "Grafana is not listening on port {{ grafana_port }} on server {{ ansible_default_ipv4.address }}"
+  when: dashboard_access.status_code != 200
+

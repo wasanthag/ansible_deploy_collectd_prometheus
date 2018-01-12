@@ -1,0 +1,5 @@
+- hosts: prometheus
+  become: true
+  roles:
+    - server/prometheus-install
+

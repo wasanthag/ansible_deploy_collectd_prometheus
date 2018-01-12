@@ -1,0 +1,5 @@
+- hosts: collectd_exporters
+  become: true
+  roles:
+    - server/collectd-exporter-install
+

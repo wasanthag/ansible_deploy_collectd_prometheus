@@ -1,0 +1,5 @@
+- hosts: grafana
+  become: true
+  roles:
+    - server/grafana-install
+

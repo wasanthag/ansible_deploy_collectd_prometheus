@@ -1,0 +1,15 @@
+- name: Remove grafana
+  yum:
+    name: grafana
+    state: absent
+- name: Check if firewalld is installed
+  yum:
+    list: firewalld
+  register: firewalld_op
+- name: Close tcp port {{ grafana_port }}
+  firewalld:
+    port: "{{ grafana_port }}/tcp"
+    permanent: true
+    state: disabled
+    immediate: true
+  when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0

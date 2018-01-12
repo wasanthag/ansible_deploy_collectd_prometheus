@@ -1,0 +1,32 @@
+- name: Stop prometheus alert manager service
+  service:
+    name: alert_manager
+    state: stopped
+- name: Find the name of the alert manager unarchived directory
+  find:
+    path: /opt
+    patterns: '*alertmanager*'
+    file_type: directory
+  register: dir_name
+- name: Delete prometheus directory
+  file:
+    path: "{{ dir_name.files[0].path }}"
+    state: absent
+- name: Delete /etc/systemd/system/alert_manager.service
+  file:
+    path: /etc/systemd/system/alert_manager.service
+    state: absent
+- name: Check if firewalld is installed
+  yum:
+    list: firewalld
+  register: firewalld_op
+- name: Close tcp port {{ alert_manager_port}} and {{ alert_manager_mesh_port}}
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    state: disabled
+    immediate: true
+  with_items:
+    - "{{ alert_manager_port}}"
+    - "{{ alert_manager_mesh_port }}"
+  when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0

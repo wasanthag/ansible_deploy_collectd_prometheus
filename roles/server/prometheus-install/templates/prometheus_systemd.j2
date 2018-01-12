@@ -1,0 +1,9 @@
+[Unit]
+Description=prometheus
+After=network.target
+[Service]
+WorkingDirectory={{ prometheus_path }}/
+ExecStart={{ prometheus_path }}/prometheus
+[Install]
+WantedBy=default.target
+
