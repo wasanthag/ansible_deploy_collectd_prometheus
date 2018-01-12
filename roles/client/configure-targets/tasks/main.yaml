@@ -1,0 +1,12 @@
+- name: Install collectd
+  yum:
+    name: collectd
+    state: latest
+- name: Configure collectd client to send metrics to colelctd exporter
+  template:
+    src: collectd_conf.j2
+    dest: /etc/collectd.conf
+- name: Start collectd client
+  service:
+    name: collectd
+    state: started

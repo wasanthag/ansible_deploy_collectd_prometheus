@@ -1,0 +1,4 @@
+- hosts: osp-controllers,osp-computes
+  become: true
+  roles:
+    - client/configure-targets
