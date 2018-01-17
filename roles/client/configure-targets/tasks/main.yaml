@@ -1,3 +1,7 @@
+- name: Add EPEL repository
+  yum:
+    name: "{{ epel_rpm_url }}"
+    state: present
 - name: Install collectd
   yum:
     name: collectd

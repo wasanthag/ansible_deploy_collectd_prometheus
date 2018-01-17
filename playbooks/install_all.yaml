@@ -1,24 +1,4 @@
-- hosts: collectd_exporters
-  become: true
-  roles:
-    - server/collectd-exporter-install
-  tags: collectd_exporter  
-
-- hosts: prometheus
-  become: true
-  roles:
-    - server/prometheus-install
-  tags: prometheus  
-
-- hosts: alert_managers
-  become: true
-  roles:
-    - server/alert-manager-install
-  tags: alert_manager  
-
-- hosts: grafana
-  become: true
-  roles:
-    - server/grafana-install
-  tags: grafana  
-
+- include: install_collectd_exporter.yaml
+- include: install_prometheus.yaml
+- include: install_alert_manager.yaml
+- include: install_grafana.yaml

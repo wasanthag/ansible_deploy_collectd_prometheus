@@ -7,6 +7,7 @@
   service:
     name: grafana-server
     state: started
+    daemon_reload: yes
 - name: Check if firewalld is installed
   yum:
     list: firewalld
