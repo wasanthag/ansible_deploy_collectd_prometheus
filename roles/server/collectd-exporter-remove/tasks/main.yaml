@@ -20,13 +20,13 @@
   yum:
     list: firewalld
   register: firewalld_op
-- name: Clode tcp port {{ collectd_exporter_port}} , {{ collectd_exporter_http_port }}
+- name: Close udp port {{ collectd_exporter_port}} and tcp port {{ collectd_exporter_http_port }}
   firewalld:
-    port: "{{ item }}/tcp"
+    port: "{{ item }}"
     permanent: true
     state: disabled
     immediate: true
   with_items:
-    - "{{ collectd_exporter_port }}"
-    - "{{ collectd_exporter_http_port }}"
+    - "{{ collectd_exporter_port }}/udp"
+    - "{{ collectd_exporter_http_port }}/tcp"
   when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0

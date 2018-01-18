@@ -10,7 +10,7 @@ LoadPlugin uptime
 Include "/etc/collectd.d"
 LoadPlugin network
 <Plugin network>
-Server "{{ groups["collectd_exporters"][0] }} "{{ collectd_exporter_port }}"
+Server "{{ groups["collectd_exporters"][0] }}" "{{ collectd_exporter_port }}"
 </Plugin>
 <Plugin network>
 Server "{{ groups["collectd_exporters"][1] }}" "{{ collectd_exporter_port }}"

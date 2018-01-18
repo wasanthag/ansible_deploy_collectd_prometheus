@@ -21,23 +21,24 @@
   template:
     src: collectd_exporter_systemd.j2
     dest: /etc/systemd/system/collectd_exporter.service
-- name: just force systemd to reread configs (2.4 and above)
-  systemd: daemon_reload=yes
+#- name: just force systemd to reread configs (2.4 and above)
+#  systemd: daemon_reload=yes
 - name: Start collectd exporter service
   service:
     name: collectd_exporter
     state: started
+    daemon_reload: yes
 - name: Check if firewalld is installed
   yum:
     list: firewalld
   register: firewalld_op
-- name: Open tcp port {{ collectd_exporter_port}} , {{ collectd_exporter_http_port }}
+- name: Open udp port {{ collectd_exporter_port}} and tcp port {{ collectd_exporter_http_port }}
   firewalld:
-    port: "{{ item }}/tcp"
+    port: "{{ item }}"
     permanent: true
     state: enabled
     immediate: true
   with_items:
-    - "{{ collectd_exporter_port }}"
-    - "{{ collectd_exporter_http_port }}"
+    - "{{ collectd_exporter_port }}/udp"
+    - "{{ collectd_exporter_http_port }}/tcp"
   when: firewalld_op.results|selectattr("yumstate", "match", "installed")|list|length != 0
